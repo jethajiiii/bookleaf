@@ -1,0 +1,36 @@
+{
+  "name": "bookleaf-portal-server",
+  "version": "1.0.0",
+  "description": "BookLeaf Author Support & Communication Portal - Server",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "seed": "node src/seed/seed.js",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "bookleaf",
+    "portal",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.11.4",
+    "morgan": "^1.12.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.9.10"
+  }
+}
