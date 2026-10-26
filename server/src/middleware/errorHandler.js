@@ -6,7 +6,7 @@ import { logger } from '../utils/logger.js';
  * Centralized error handler converting operational and library errors
  * into a uniform JSON response structure: { error: { code, message, details? } }.
  */
-export const errorHandler = (err, req, res, next) => {
+export const errorHandler = (err, req, res, _next) => {
   let statusCode = 500;
   let code = 'INTERNAL_ERROR';
   let message = 'An unexpected server error occurred';

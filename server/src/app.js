@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
 import { env } from './config/env.js';
+import apiRouter from './routes/index.js';
 import { notFound } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -30,6 +31,9 @@ app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+// Primary API routes
+app.use('/api', apiRouter);
 
 // 404 handler for unrecognized endpoints
 app.use(notFound);
