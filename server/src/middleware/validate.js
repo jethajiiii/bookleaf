@@ -16,8 +16,22 @@ export const validate = (schema) => (req, res, next) => {
         params: req.params,
       });
       if (parsed.body !== undefined) req.body = parsed.body;
-      if (parsed.query !== undefined) req.query = parsed.query;
-      if (parsed.params !== undefined) req.params = parsed.params;
+      if (parsed.query !== undefined) {
+        Object.defineProperty(req, 'query', {
+          value: parsed.query,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        });
+      }
+      if (parsed.params !== undefined) {
+        Object.defineProperty(req, 'params', {
+          value: parsed.params,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        });
+      }
     } else {
       req.body = schema.parse(req.body);
     }
