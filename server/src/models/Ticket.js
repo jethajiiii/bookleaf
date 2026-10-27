@@ -45,6 +45,8 @@ const ticketSchema = new mongoose.Schema(
       status: { type: String, enum: AI_STATUS_VALUES, default: AI_STATUS.PENDING },
       draft: { type: String, default: null },
       draftGeneratedAt: { type: Date, default: null },
+      draftCategory: { type: String, default: null },
+      draftForAuthorMessages: { type: Number, default: 0 },
     },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     messages: [messageSchema],

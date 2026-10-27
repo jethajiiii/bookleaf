@@ -1,4 +1,5 @@
 import * as adminTicketService from '../services/adminTicket.service.js';
+import * as adminDraftService from '../services/adminDraft.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 export const getTickets = asyncHandler(async (req, res) => {
@@ -29,4 +30,19 @@ export const addInternalNote = asyncHandler(async (req, res) => {
 export const getStats = asyncHandler(async (req, res) => {
   const stats = await adminTicketService.getStats();
   res.status(200).json({ stats });
+});
+
+export const getDraft = asyncHandler(async (req, res) => {
+  const result = await adminDraftService.getTicketDraft(req.params.id, { force: false });
+  res.status(200).json(result);
+});
+
+export const regenerateDraft = asyncHandler(async (req, res) => {
+  const result = await adminDraftService.getTicketDraft(req.params.id, { force: true });
+  res.status(200).json(result);
+});
+
+export const retryClassification = asyncHandler(async (req, res) => {
+  const ticket = await adminDraftService.retryClassification(req.params.id);
+  res.status(200).json({ ticket });
 });

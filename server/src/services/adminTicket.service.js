@@ -12,7 +12,7 @@ import { calculateAgeInHours, buildBookSnapshot } from '../utils/ticketFormatter
 export const buildAdminTicketQuery = (filters = {}, adminUserId) => {
   const query = {};
   if (filters.status) {
-    query.status = filters.status;
+    if (filters.status !== 'all') query.status = filters.status;
   } else {
     query.status = { $in: [TICKET_STATUS.OPEN, TICKET_STATUS.IN_PROGRESS] };
   }
@@ -23,11 +23,8 @@ export const buildAdminTicketQuery = (filters = {}, adminUserId) => {
     if (filters.from) query.createdAt.$gte = new Date(filters.from);
     if (filters.to) query.createdAt.$lte = new Date(filters.to);
   }
-  if (filters.assigned === 'me') {
-    query.assignedTo = adminUserId;
-  } else if (filters.assigned === 'unassigned') {
-    query.assignedTo = null;
-  }
+  if (filters.assigned === 'me') query.assignedTo = adminUserId;
+  else if (filters.assigned === 'unassigned') query.assignedTo = null;
   if (filters.search && filters.search.trim()) {
     const escaped = filters.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     query.subject = { $regex: escaped, $options: 'i' };

@@ -17,7 +17,7 @@ const dateStringSchema = z
 
 export const listTicketsQuerySchema = z.object({
   query: z.object({
-    status: z.enum(TICKET_STATUS_VALUES).optional(),
+    status: z.enum([...TICKET_STATUS_VALUES, 'all']).optional(),
     category: z.enum(CATEGORY_VALUES).optional(),
     priority: z.enum(PRIORITY_VALUES).optional(),
     from: dateStringSchema.optional(),

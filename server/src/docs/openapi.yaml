@@ -1,0 +1,1192 @@
+openapi: 3.0.3
+info:
+  title: BookLeaf Author Support & Communication Portal API
+  version: 1.0.0
+  description: |
+    Production-grade RESTful API for BookLeaf Publishing Author Support & Communication Portal.
+    Includes role-based author & admin portals, ticketing workflows, and AI-assisted triage & drafting.
+servers:
+  - url: http://localhost:5000/api
+    description: Local development server
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      summary: API Health Check
+      description: Public endpoint verifying server liveness.
+      security: []
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /auth/login:
+    post:
+      summary: User Authentication
+      description: Authenticates authors and administrators with email and password, returning a signed JWT.
+      security: []
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/me:
+    get:
+      summary: Current User Profile
+      description: Returns profile details of the authenticated user from session token.
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Authenticated user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /books:
+    get:
+      summary: List Author Books
+      description: Retrieves all published and in-production books belonging to the authenticated author.
+      tags:
+        - Author - Books
+      responses:
+        '200':
+          description: Array of books authored by the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  books:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Book'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /tickets:
+    get:
+      summary: List Author Tickets
+      description: Retrieves tickets created by the authenticated author in descending chronological order.
+      tags:
+        - Author - Tickets
+      responses:
+        '200':
+          description: Author's ticket collection (internal notes & AI fields stripped)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuthorTicket'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      summary: Create Support Ticket
+      description: |
+        Creates a new support query for the authenticated author.
+        Triggers asynchronous AI triage in background with initial status "pending".
+      tags:
+        - Author - Tickets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTicketRequest'
+      responses:
+        '201':
+          description: Ticket created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: '#/components/schemas/AuthorTicket'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /tickets/{id}:
+    get:
+      summary: Get Author Ticket by ID
+      description: Retrieves details and conversation thread of a ticket owned by the authenticated author.
+      tags:
+        - Author - Tickets
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      responses:
+        '200':
+          description: Author ticket view
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: '#/components/schemas/AuthorTicket'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /tickets/{id}/messages:
+    post:
+      summary: Add Author Message
+      description: |
+        Appends an author reply to the ticket thread.
+        If the ticket was resolved, it is reopened to 'open'.
+        Returns 409 Conflict if the ticket is closed.
+      tags:
+        - Author - Tickets
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMessageRequest'
+      responses:
+        '200':
+          description: Message added and thread updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: '#/components/schemas/AuthorTicket'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Ticket is closed and rejects further replies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/stats:
+    get:
+      summary: Admin Queue Stats
+      description: Returns operational counters for open, in_progress, critical unresolved, unassigned, and overdue tickets.
+      tags:
+        - Admin - Queue
+      responses:
+        '200':
+          description: Operational metric counters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stats:
+                    $ref: '#/components/schemas/StatsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /admin/tickets:
+    get:
+      summary: Filter Admin Tickets
+      description: |
+        Paginated queue of support tickets sorted by urgency (priorityRank asc, createdAt asc).
+        By default (no status filter), only 'open' and 'in_progress' tickets are shown.
+        Pass 'status=all' or specific status values to view resolved/closed tickets.
+      tags:
+        - Admin - Queue
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [open, in_progress, resolved, closed, all]
+          description: Filter by status, or 'all' to disable default active filtering
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [royalty, isbn, printing, distribution, production, general]
+        - name: priority
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [critical, high, medium, low]
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter created after timestamp
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter created before timestamp
+        - name: assigned
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [me, unassigned]
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Case-insensitive search on ticket subject
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated ticket queue
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminTicketListItem'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  totalPages:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /admin/tickets/{id}:
+    get:
+      summary: Get Full Admin Ticket
+      description: |
+        Retrieves complete ticket document including internal notes, AI classification/draft fields,
+        assigned admin name, and computed null-safe bookSnapshot.
+      tags:
+        - Admin - Queue
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      responses:
+        '200':
+          description: Detailed admin ticket document
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: '#/components/schemas/AdminTicketDetail'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    patch:
+      summary: Update Ticket Triage Fields
+      description: |
+        Modifies status, category, priority, or assignedTo.
+        Updating priority automatically synchronizes priorityRank.
+        Never touches ai.* fields.
+      tags:
+        - Admin - Queue
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTicketRequest'
+      responses:
+        '200':
+          description: Ticket updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: '#/components/schemas/AdminTicketDetail'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /admin/tickets/{id}/replies:
+    post:
+      summary: Send Admin Reply
+      description: Appends an official admin reply to the conversation thread and advances open status to in_progress.
+      tags:
+        - Admin - Actions
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddReplyRequest'
+      responses:
+        '200':
+          description: Reply recorded and ticket updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: '#/components/schemas/AdminTicketDetail'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /admin/tickets/{id}/notes:
+    post:
+      summary: Add Internal Note
+      description: Records an admin-only collaboration note without notifying or exposing to the author.
+      tags:
+        - Admin - Actions
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddInternalNoteRequest'
+      responses:
+        '201':
+          description: Internal note saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: '#/components/schemas/AdminTicketDetail'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /admin/tickets/{id}/draft:
+    get:
+      summary: Get or Generate AI Reply Draft
+      description: |
+        Retrieves cached AI draft or generates a new one based on category-specific KB, tone rules, and computed book facts.
+        If triage is still pending, classification is performed first.
+        If the AI provider is unavailable or exhausted, returns HTTP 200 with {draft: null, aiAvailable: false} rather than 500.
+      tags:
+        - Admin - AI Assistant
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      responses:
+        '200':
+          description: Draft reply response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftResponse'
+              examples:
+                available:
+                  summary: AI reply draft generated successfully
+                  value:
+                    draft: "Dear Priya, Thank you for contacting BookLeaf Support regarding the ISBN assignment for 'Whispers of the Monsoon'. Our team has verified the ISBN 978-93-12345-67-8 and confirmed listing synchronization across Amazon and Flipkart."
+                    aiAvailable: true
+                    cached: false
+                aiUnavailable:
+                  summary: AI provider quota exceeded or service unavailable
+                  value:
+                    draft: null
+                    aiAvailable: false
+                    cached: false
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /admin/tickets/{id}/draft/regenerate:
+    post:
+      summary: Force Regenerate AI Reply Draft
+      description: |
+        Bypasses draft cache and calls LLM to produce a freshly generated reply draft.
+        Requires authenticated Admin role.
+        If the AI provider is unavailable, returns HTTP 200 with {draft: null, aiAvailable: false}.
+      tags:
+        - Admin - AI Assistant
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      responses:
+        '200':
+          description: Regenerated draft reply
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftResponse'
+              examples:
+                available:
+                  summary: AI reply draft regenerated successfully
+                  value:
+                    draft: "Dear Priya, Thank you for contacting BookLeaf Support..."
+                    aiAvailable: true
+                    cached: false
+                aiUnavailable:
+                  summary: AI provider quota exceeded or service unavailable
+                  value:
+                    draft: null
+                    aiAvailable: false
+                    cached: false
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /admin/tickets/{id}/classify/retry:
+    post:
+      summary: Retry AI Classification
+      description: Re-executes ticket categorization and priority scoring on demand.
+      tags:
+        - Admin - AI Assistant
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      responses:
+        '200':
+          description: Re-classified ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: '#/components/schemas/AdminTicketDetail'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /admin/health:
+    get:
+      summary: Admin Role Health Probe
+      description: Verifies authenticated administrative session access.
+      tags:
+        - Admin - Queue
+      responses:
+        '200':
+          description: Admin session valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: admin-ok
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Enter JWT token in format 'Bearer <token>'
+
+  parameters:
+    TicketId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{24}$'
+      description: 24-character hexadecimal MongoDB ObjectId
+
+  responses:
+    ValidationError:
+      description: Input validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: Request validation failed
+              details:
+                - path: body.subject
+                  message: Subject must be between 5 and 150 characters
+    UnauthorizedError:
+      description: Missing or invalid JWT session token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: UNAUTHENTICATED
+              message: Authentication required. Please provide a valid Bearer token.
+    ForbiddenError:
+      description: Insufficient privileges for requested resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: FORBIDDEN
+              message: Access denied. Required role: admin.
+    NotFoundError:
+      description: Requested resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: NOT_FOUND
+              message: Ticket not found
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Request validation failed
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  path:
+                    type: string
+                  message:
+                    type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 6512bd8f489c6d32c918ef01
+        name:
+          type: string
+          example: Priya Sharma
+        email:
+          type: string
+          example: priya.sharma@email.com
+        role:
+          type: string
+          enum: [author, admin]
+          example: author
+        authorCode:
+          type: string
+          example: AUTH001
+        phone:
+          type: string
+          example: +91-98765-43210
+        city:
+          type: string
+          example: Mumbai
+
+    Book:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 6512bd8f489c6d32c918ef02
+        bookCode:
+          type: string
+          example: BK001
+        title:
+          type: string
+          example: Whispers of the Ganges
+        isbn:
+          type: string
+          nullable: true
+          example: 978-93-5XXXX-01-1
+        genre:
+          type: string
+          nullable: true
+          example: Literary Fiction
+        status:
+          type: string
+          example: Published & Live
+        publicationDate:
+          type: string
+          format: date-time
+          nullable: true
+        mrp:
+          type: number
+          nullable: true
+          example: 399
+        royaltyPerCopy:
+          type: number
+          nullable: true
+          example: 35
+        totalCopiesSold:
+          type: integer
+          example: 342
+        totalRoyaltyEarned:
+          type: number
+          example: 11970
+        royaltyPaid:
+          type: number
+          example: 8400
+        royaltyPending:
+          type: number
+          example: 3570
+        lastPayoutDate:
+          type: string
+          format: date-time
+          nullable: true
+        printPartner:
+          type: string
+          nullable: true
+          example: In-House
+        availableOn:
+          type: array
+          items:
+            type: string
+          example: [Amazon India, Flipkart, BookLeaf Store]
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 6512bd8f489c6d32c918ef03
+        sender:
+          type: string
+          enum: [author, admin]
+          example: author
+        senderName:
+          type: string
+          example: Priya Sharma
+        body:
+          type: string
+          example: I noticed the ISBN listed on Amazon does not match my printed copy.
+        createdAt:
+          type: string
+          format: date-time
+
+    InternalNote:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 6512bd8f489c6d32c918ef04
+        admin:
+          type: string
+          example: 6512bd8f489c6d32c918ef05
+        adminName:
+          type: string
+          example: Admin
+        body:
+          type: string
+          example: Cataloging team confirmed ASIN was mapped to older paperback ISBN.
+        createdAt:
+          type: string
+          format: date-time
+
+    AiSubdocument:
+      type: object
+      properties:
+        category:
+          type: string
+          nullable: true
+          example: isbn
+        priority:
+          type: string
+          nullable: true
+          example: high
+        reason:
+          type: string
+          nullable: true
+          example: External store metadata mismatch impeding catalog discovery.
+        status:
+          type: string
+          enum: [pending, done, failed]
+          example: done
+        draft:
+          type: string
+          nullable: true
+        draftGeneratedAt:
+          type: string
+          format: date-time
+          nullable: true
+        draftCategory:
+          type: string
+          nullable: true
+          example: isbn
+        draftForAuthorMessages:
+          type: integer
+          example: 1
+
+    BookSnapshot:
+      type: object
+      nullable: true
+      properties:
+        title:
+          type: string
+          example: Whispers of the Ganges
+        status:
+          type: string
+          example: Published & Live
+        isbn:
+          type: string
+          nullable: true
+          example: 978-93-5XXXX-01-1
+        mrp:
+          type: number
+          nullable: true
+          example: 399
+        totalCopiesSold:
+          type: integer
+          example: 342
+        totalRoyaltyEarned:
+          type: number
+          example: 11970
+        royaltyPaid:
+          type: number
+          example: 8400
+        royaltyPending:
+          type: number
+          example: 3570
+        lastPayoutDate:
+          type: string
+          format: date-time
+          nullable: true
+        publicationDate:
+          type: string
+          format: date-time
+          nullable: true
+        printPartner:
+          type: string
+          nullable: true
+          example: In-House
+        availableOn:
+          type: array
+          items:
+            type: string
+          example: [Amazon India, Flipkart]
+
+    AuthorTicket:
+      type: object
+      description: Stripped view safe for author consumption (omits internalNotes, ai, assignedTo)
+      properties:
+        id:
+          type: string
+          example: 6512bd8f489c6d32c918ef06
+        ticketNo:
+          type: integer
+          example: 1001
+        subject:
+          type: string
+          example: ISBN mismatch on Amazon product page
+        description:
+          type: string
+          example: The printed ISBN differs from the online store listing.
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+          example: open
+        category:
+          type: string
+          enum: [royalty, isbn, printing, distribution, production, general]
+          example: isbn
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+          example: high
+        attachments:
+          type: array
+          items:
+            type: string
+        book:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+            bookCode:
+              type: string
+            title:
+              type: string
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AdminTicketListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 6512bd8f489c6d32c918ef06
+        ticketNo:
+          type: integer
+          example: 1001
+        subject:
+          type: string
+          example: ISBN mismatch on Amazon product page
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+          example: open
+        category:
+          type: string
+          enum: [royalty, isbn, printing, distribution, production, general]
+          example: isbn
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+          example: high
+        priorityRank:
+          type: integer
+          example: 2
+        authorName:
+          type: string
+          example: Priya Sharma
+        bookTitle:
+          type: string
+          example: Whispers of the Ganges
+        assignedToName:
+          type: string
+          nullable: true
+          example: Admin
+        ageInHours:
+          type: number
+          example: 14.2
+        createdAt:
+          type: string
+          format: date-time
+
+    AdminTicketDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 6512bd8f489c6d32c918ef06
+        ticketNo:
+          type: integer
+          example: 1001
+        subject:
+          type: string
+          example: ISBN mismatch on Amazon product page
+        description:
+          type: string
+          example: The printed ISBN differs from the online store listing.
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+          example: open
+        category:
+          type: string
+          enum: [royalty, isbn, printing, distribution, production, general]
+          example: isbn
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+          example: high
+        priorityRank:
+          type: integer
+          example: 2
+        author:
+          $ref: '#/components/schemas/User'
+        authorName:
+          type: string
+          example: Priya Sharma
+        bookTitle:
+          type: string
+          example: Whispers of the Ganges
+        assignedTo:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            email:
+              type: string
+        assignedToName:
+          type: string
+          nullable: true
+          example: Admin
+        bookSnapshot:
+          $ref: '#/components/schemas/BookSnapshot'
+        ageInHours:
+          type: number
+          example: 14.2
+        ai:
+          $ref: '#/components/schemas/AiSubdocument'
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        internalNotes:
+          type: array
+          items:
+            $ref: '#/components/schemas/InternalNote'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    StatsResponse:
+      type: object
+      properties:
+        open:
+          type: integer
+          example: 3
+        in_progress:
+          type: integer
+          example: 1
+        inProgress:
+          type: integer
+          example: 1
+        criticalUnresolved:
+          type: integer
+          example: 1
+        unassigned:
+          type: integer
+          example: 2
+        overdue:
+          type: integer
+          example: 0
+
+    DraftResponse:
+      type: object
+      required:
+        - aiAvailable
+      properties:
+        draft:
+          type: string
+          nullable: true
+          example: Dear Priya, Thank you for reaching out regarding the ISBN mismatch...
+        aiAvailable:
+          type: boolean
+          example: true
+        cached:
+          type: boolean
+          example: false
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: priya.sharma@email.com
+        password:
+          type: string
+          minLength: 6
+          example: password123
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/User'
+
+    CreateTicketRequest:
+      type: object
+      required:
+        - subject
+        - description
+      properties:
+        subject:
+          type: string
+          minLength: 5
+          maxLength: 150
+          example: Delayed royalty payout for Q3
+        description:
+          type: string
+          minLength: 20
+          maxLength: 5000
+          example: I published my book in July and have not received my quarterly royalty payout yet.
+        bookId:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          nullable: true
+          example: 6512bd8f489c6d32c918ef02
+        attachments:
+          type: array
+          items:
+            type: string
+          example: [bank_statement.pdf]
+
+    CreateMessageRequest:
+      type: object
+      required:
+        - body
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 5000
+          example: Yes, I confirmed my bank account number is correct in the dashboard.
+
+    UpdateTicketRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        category:
+          type: string
+          enum: [royalty, isbn, printing, distribution, production, general]
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+        assignedTo:
+          type: string
+          nullable: true
+          enum: [me]
+          description: Pass 'me' to assign to current admin or null to unassign
+          example: me
+
+    AddReplyRequest:
+      type: object
+      required:
+        - body
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 5000
+          example: Hello Priya, our team has submitted the metadata update to Amazon Seller Support.
+
+    AddInternalNoteRequest:
+      type: object
+      required:
+        - body
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 5000
+          example: Contacted Repro India to check warehouse inventory sync issue.

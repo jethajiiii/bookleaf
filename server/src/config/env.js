@@ -13,7 +13,7 @@ const envSchema = z.object({
   CLIENT_URL: z.string().url({ message: 'CLIENT_URL must be a valid URL' }).default('http://localhost:5173'),
   LLM_PROVIDER: z.enum(['gemini', 'claude']).default('gemini'),
   GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default('gemini-1.5-pro'),
+  GEMINI_MODEL: z.string().default('gemini-3.5-flash-lite'),
   CLAUDE_MODEL: z.string().default('claude-3-5-sonnet-20241022'),
   ANTHROPIC_API_KEY: z.string().optional(),
 });

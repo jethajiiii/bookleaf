@@ -1,9 +1,12 @@
+import { setImmediate } from 'node:timers';
 import { Ticket } from '../models/Ticket.js';
 import { Book } from '../models/Book.js';
 import { ApiError } from '../utils/ApiError.js';
 import { TICKET_STATUS } from '../constants/ticketStatus.js';
 import { ROLES } from '../constants/roles.js';
 import { AI_STATUS } from '../constants/aiStatus.js';
+import { runAiTriage } from './aiTriage.service.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Strips fields that must never be exposed to authors.
@@ -43,6 +46,12 @@ export const createTicket = async (authorId, authorName, payload) => {
     attachments,
     messages: [{ sender: ROLES.AUTHOR, senderName: authorName, body: description }],
     ai: { status: AI_STATUS.PENDING },
+  });
+
+  setImmediate(() => {
+    runAiTriage(ticket._id).catch((err) => {
+      logger.error('Background AI triage failed', { ticketId: ticket._id, error: err.message });
+    });
   });
 
   return toAuthorView(ticket.toObject());
