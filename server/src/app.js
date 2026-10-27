@@ -20,7 +20,19 @@ app.use(
 // Cross-Origin Resource Sharing scoped to validated client origin
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const configured = env.CLIENT_URL.replace(/\/$/, '');
+      const current = origin.replace(/\/$/, '');
+      if (
+        current === configured ||
+        current.endsWith('.vercel.app') ||
+        /^http:\/\/localhost:\d+$/.test(current)
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
   })
 );
