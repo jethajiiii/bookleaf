@@ -12,7 +12,7 @@ const POLL_INTERVAL = 5000;
 
 /**
  * MyTicketsPage renders author tickets with silent polling, status filters,
- * and expandable conversation cards.
+ * and expandable conversation cards — styled with the editorial theme.
  */
 export function MyTicketsPage() {
   const [tickets, setTickets] = useState([]);
@@ -79,44 +79,45 @@ export function MyTicketsPage() {
   }, []);
 
   const filtered =
-    activeTab === 'all'
-      ? tickets
-      : tickets.filter((t) => t.status === activeTab);
+    activeTab === 'all' ? tickets : tickets.filter((t) => t.status === activeTab);
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
         <Spinner size="lg" />
-        <p className="text-sm text-charcoal-light">Loading your support tickets...</p>
+        <p className="text-sm text-ink-600 font-serif italic">Loading your support tickets...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-xl mx-auto my-12 p-6 bg-card border border-terracotta/30 rounded-2xl text-center space-y-4">
-        <p className="text-sm text-charcoal-light">{error}</p>
-        <Button variant="primary" size="md" onClick={fetchTickets}>
-          Retry
-        </Button>
+      <div className="max-w-xl mx-auto my-12 p-8 bg-cream-50 border border-terracotta-500/30 rounded-lg text-center space-y-4">
+        <div className="w-10 h-10 bg-terracotta-500/10 text-terracotta-600 rounded-full flex items-center justify-center mx-auto font-serif text-lg">!</div>
+        <p className="text-sm text-ink-600">{error}</p>
+        <Button variant="primary" size="md" onClick={fetchTickets}>Retry</Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-card-border pb-4">
+      {/* Page header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-5 border-b border-cream-300">
         <div>
-          <h1 className="font-serif text-3xl font-bold text-charcoal tracking-tight">
+          <span className="text-[11px] font-mono uppercase tracking-[0.25em] text-terracotta-600 font-semibold">
+            Author Portal
+          </span>
+          <h1 className="font-serif text-3xl font-normal text-ink-900 mt-1">
             Support Tickets
           </h1>
-          <p className="text-sm text-charcoal-light mt-1">
+          <p className="text-sm text-ink-600 font-light mt-1">
             Track your queries and communicate with the support team.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cream-dark/50 border border-card-border text-[11px] text-charcoal-light font-medium">
-            <span className="w-2 h-2 rounded-full bg-sage inline-block animate-pulse" />
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cream-200 border border-cream-300 text-[11px] text-ink-600 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-sage-500 inline-block animate-pulse" />
             Live
           </span>
           <Button variant="primary" size="sm" onClick={() => navigate('/tickets/new')}>
@@ -125,11 +126,7 @@ export function MyTicketsPage() {
         </div>
       </div>
 
-      <TicketFilterTabs
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        tickets={tickets}
-      />
+      <TicketFilterTabs activeTab={activeTab} onSelectTab={setActiveTab} tickets={tickets} />
 
       {filtered.length === 0 ? (
         <EmptyState

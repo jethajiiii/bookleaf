@@ -2,24 +2,26 @@ import { useAuth } from '../../hooks/useAuth.js';
 import Button from '../ui/Button.jsx';
 
 /**
- * TopBar component for BookLeaf Admin Portal header branding and admin profile.
+ * Editorial AdminTopBar with monogram, press typography, and admin profile.
  */
 export function AdminTopBar() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="sticky top-0 z-30 bg-card/95 backdrop-blur border-b border-card-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-30 bg-[#FCF9F5]/95 backdrop-blur-md border-b border-[#E5DCCE]">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 h-16 flex items-center justify-between">
         {/* Brand / Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-teal text-white flex items-center justify-center font-serif text-lg font-bold shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="w-9 h-9 rounded-xl bg-[#3F7F8C] text-white flex items-center justify-center font-editorial text-xl font-medium shadow-sm border border-amber-200/30">
             B
           </div>
           <div>
-            <span className="font-serif text-lg font-bold text-charcoal tracking-tight block leading-tight">
-              BookLeaf
-            </span>
-            <span className="text-[10px] text-teal font-semibold uppercase tracking-wider block">
+            <div className="flex items-center gap-2">
+              <span className="font-editorial text-xl font-semibold text-[#2B2622] tracking-tight leading-tight">
+                BookLeaf
+              </span>
+            </div>
+            <span className="text-[10px] uppercase tracking-widest text-[#55433c] font-medium font-sans block">
               Admin Operations
             </span>
           </div>
@@ -29,17 +31,22 @@ export function AdminTopBar() {
         <div className="flex items-center gap-4">
           {user && (
             <div className="hidden sm:block text-right">
-              <span className="text-sm font-semibold text-charcoal block leading-tight">
+              <span className="text-xs font-semibold text-[#2B2622] block leading-tight font-sans">
                 {user.name}
               </span>
-              <span className="text-xs text-teal font-medium block">
+              <span className="text-[11px] text-[#3F7F8C] font-medium block">
                 Support Admin
               </span>
             </div>
           )}
 
           {user && (
-            <Button variant="ghost" size="sm" onClick={logout} className="text-charcoal-light">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={logout}
+              className="rounded-full text-xs"
+            >
               Sign out
             </Button>
           )}

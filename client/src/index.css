@@ -6,12 +6,110 @@
   body {
     background-color: #F4EDE0;
     color: #2B2622;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
     margin: 0;
     padding: 0;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Fraunces', serif;
+    font-family: 'Newsreader', 'Fraunces', serif;
   }
 }
+
+/* 3D Bookshelf & Perspective Effects */
+.bookshelf-stage {
+  perspective: 1200px;
+}
+
+.shadow-slant-left {
+  filter: drop-shadow(-38px 46px 28px rgba(78, 52, 30, 0.18))
+         drop-shadow(-15px 20px 14px rgba(78, 52, 30, 0.12));
+}
+
+.book-spine {
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: bottom center;
+}
+
+.book-spine:hover {
+  transform: translateY(-12px) scale(1.02);
+  z-index: 30;
+}
+
+.wood-grain {
+  background: linear-gradient(180deg, #CE9D6C 0%, #B88554 40%, #9A6938 100%);
+  box-shadow: inset 0 2px 2px rgba(255,255,255,0.4), inset 0 -3px 4px rgba(0,0,0,0.25);
+}
+
+.wood-shelf-bevel {
+  background: linear-gradient(90deg, #A87647 0%, #C89766 15%, #C89766 85%, #8E5F33 100%);
+}
+
+.pulse-ring {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #C25232;
+  animation: pulseAnim 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulseAnim {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.bg-grain {
+  background-image: radial-gradient(rgba(43, 35, 29, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.book-ribbon {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* Atelier Editorial Styles from Stitch */
+.font-editorial {
+  font-family: 'Cormorant Garamond', 'Fraunces', Georgia, serif;
+}
+
+.font-display-italic {
+  font-family: 'Newsreader', 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+}
+
+.bg-atelier-gradient {
+  background: radial-gradient(circle at 18% 22%, rgba(224, 176, 80, 0.14) 0%, transparent 50%),
+              radial-gradient(circle at 85% 80%, rgba(212, 112, 75, 0.12) 0%, transparent 45%),
+              #F7F1E7;
+}
+
+.fine-rule {
+  background-image: linear-gradient(to right, transparent, #E5DCCE 20%, #E5DCCE 80%, transparent);
+  height: 1px;
+}
+
+.spine-foil {
+  box-shadow: inset -2px 0 4px rgba(0,0,0,0.22), inset 2px 0 2px rgba(255,255,255,0.18);
+}
+
+.shelf-timber {
+  background: linear-gradient(180deg, #B58A63 0%, #9E724C 60%, #7D5837 100%);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), 0 8px 16px -4px rgba(53, 35, 23, 0.18);
+}
+
+.alcove-recess {
+  box-shadow: inset 0 8px 24px -4px rgba(60, 42, 28, 0.12), inset 0 -4px 12px rgba(60, 42, 28, 0.08);
+}
+

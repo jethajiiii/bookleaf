@@ -5,6 +5,7 @@ import MyTicketsPage from '../features/tickets/MyTicketsPage.jsx';
 import SubmitQueryPage from '../features/tickets/SubmitQueryPage.jsx';
 import AdminLayout from '../components/layout/AdminLayout.jsx';
 import TicketQueuePage from '../features/admin/TicketQueuePage.jsx';
+import TicketDetailPage from '../features/admin/TicketDetailPage.jsx';
 import LoginPage from '../features/auth/LoginPage.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
 
@@ -54,6 +55,10 @@ export const router = createBrowserRouter([
       {
         path: 'queue',
         element: <TicketQueuePage />,
+      },
+      {
+        path: 'tickets/:id',
+        element: <TicketDetailPage />,
       },
     ],
   },

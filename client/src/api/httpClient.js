@@ -4,8 +4,9 @@ import axios from 'axios';
  * Shared Axios client configured for BookLeaf API communication.
  * Automatically injects the stored JWT token if present.
  */
+const apiBase = import.meta.env.VITE_API_URL || '';
 const httpClient = axios.create({
-  baseURL: '/api',
+  baseURL: apiBase ? `${apiBase.replace(/\/$/, '')}/api` : '/api',
   headers: {
     'Content-Type': 'application/json',
   },

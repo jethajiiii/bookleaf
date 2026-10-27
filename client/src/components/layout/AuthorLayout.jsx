@@ -1,5 +1,6 @@
-import { NavLink, Outlet } from 'react-router-dom';
-import TopBar from './TopBar.jsx';
+import { useLocation, NavLink, Outlet } from 'react-router-dom';
+import AuthorNavHeader from '../../features/books/AuthorNavHeader.jsx';
+import EditorialFooter from '../../features/books/EditorialFooter.jsx';
 
 const NAV_ITEMS = [
   { label: 'My Books', path: '/books' },
@@ -8,25 +9,37 @@ const NAV_ITEMS = [
 ];
 
 /**
- * AuthorLayout wraps author views with TopBar, sub-navigation tabs, and page container.
+ * AuthorLayout wraps author views with editorial header and sub-navigation.
+ * The books page is rendered full-bleed; other pages get the portal sub-nav.
  */
 export function AuthorLayout() {
-  return (
-    <div className="min-h-screen bg-cream flex flex-col">
-      <TopBar />
+  const location = useLocation();
+  const isBooksPage = location.pathname === '/books' || location.pathname === '/';
 
-      {/* Sub-Navigation Tabs */}
-      <nav className="bg-card border-b border-card-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-8 overflow-x-auto">
+  if (isBooksPage) {
+    return (
+      <div className="min-h-screen bg-cream-100 flex flex-col">
+        <Outlet />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-cream-100 flex flex-col">
+      <AuthorNavHeader />
+
+      {/* Sub-navigation tabs */}
+      <nav className="bg-cream-50 border-b border-cream-300">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 flex space-x-8 overflow-x-auto">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `py-3.5 px-1 border-b-2 text-sm whitespace-nowrap transition-colors duration-150 ${
+                `py-3.5 px-1 border-b-2 text-[13px] tracking-wide whitespace-nowrap transition-colors duration-150 ${
                   isActive
-                    ? 'border-terracotta text-terracotta font-semibold'
-                    : 'border-transparent text-charcoal-light hover:text-charcoal hover:border-card-border font-medium'
+                    ? 'border-ink-900 text-ink-900 font-semibold'
+                    : 'border-transparent text-ink-600 hover:text-ink-900 hover:border-cream-300 font-medium'
                 }`
               }
             >
@@ -36,10 +49,11 @@ export function AuthorLayout() {
         </div>
       </nav>
 
-      {/* Main Page Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-6 md:px-12 py-10">
         <Outlet />
       </main>
+
+      <EditorialFooter />
     </div>
   );
 }

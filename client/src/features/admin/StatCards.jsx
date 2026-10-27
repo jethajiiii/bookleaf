@@ -14,34 +14,34 @@ export function StatCards({ stats = {}, onSelectCard }) {
   const cards = [
     {
       key: 'open',
-      label: 'Open Tickets',
+      label: 'Open Folios',
       value: stats.open ?? 0,
-      description: 'Awaiting first response',
-      accent: 'text-teal border-teal/30 bg-teal-light/40',
+      description: 'Awaiting response',
+      accentBg: 'bg-[#3F7F8C]',
       filterParams: { status: 'open' },
     },
     {
       key: 'critical',
       label: 'Critical Priority',
       value: stats.criticalUnresolved ?? 0,
-      description: 'Active urgent tickets',
-      accent: 'text-terracotta border-terracotta/30 bg-terracotta-light/40',
+      description: 'Active urgent folios',
+      accentBg: 'bg-[#984221]',
       filterParams: { priority: 'critical' },
     },
     {
       key: 'unassigned',
       label: 'Unassigned',
       value: stats.unassigned ?? 0,
-      description: 'Needs admin allocation',
-      accent: 'text-mustard-dark border-mustard/30 bg-mustard-light/40',
+      description: 'Pending curator allocation',
+      accentBg: 'bg-[#C88C35]',
       filterParams: { assigned: 'unassigned' },
     },
     {
       key: 'overdue',
-      label: 'Overdue 3d+',
+      label: 'Overdue 72h+',
       value: stats.overdue ?? 0,
-      description: 'Unresolved for 72h+',
-      accent: 'text-terracotta border-terracotta/40 bg-terracotta-light/50',
+      description: 'Exceeded SLA threshold',
+      accentBg: 'bg-[#D4704B]',
       filterParams: { status: 'open' },
     },
   ];
@@ -53,18 +53,18 @@ export function StatCards({ stats = {}, onSelectCard }) {
           key={card.key}
           type="button"
           onClick={() => onSelectCard?.(card.filterParams)}
-          className="bg-card border border-card-border rounded-2xl p-5 text-left transition-all hover:shadow-md hover:border-charcoal-muted/30 focus:outline-none focus:ring-2 focus:ring-teal/30"
+          className="bg-[#FCF9F5] border border-[#E5DCCE] rounded-2xl p-5 text-left transition-all hover:shadow-soft-card hover:border-[#984221]/30 focus:outline-none focus:ring-1 focus:ring-[#984221]/40 cursor-pointer"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-charcoal-muted">
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-[#55433c] font-sans">
               {card.label}
             </span>
-            <span className={`w-2.5 h-2.5 rounded-full border ${card.accent}`} />
+            <span className={`w-2 h-2 rounded-full ${card.accentBg}`} />
           </div>
-          <p className="font-serif text-3xl font-bold text-charcoal tracking-tight">
+          <p className="font-editorial text-3xl sm:text-4xl font-normal text-[#2B2622] tracking-tight">
             {card.value}
           </p>
-          <p className="text-[11px] text-charcoal-muted mt-1 truncate">
+          <p className="text-[11px] text-[#2B2622]/60 mt-1 truncate font-display-italic">
             {card.description}
           </p>
         </button>

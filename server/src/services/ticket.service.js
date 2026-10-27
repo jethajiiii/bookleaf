@@ -16,7 +16,14 @@ import { logger } from '../utils/logger.js';
  * @returns {Object} Author-safe ticket view
  */
 export const toAuthorView = (ticket) => {
-  const { internalNotes: _n, ai: _a, assignedTo: _t, ...safe } = ticket;
+  const {
+    internalNotes: _n,
+    ai: _a,
+    assignedTo: _t,
+    priority: _p,
+    priorityRank: _pr,
+    ...safe
+  } = ticket;
   return safe;
 };
 

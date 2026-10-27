@@ -10,11 +10,11 @@ export function EmptyState({
 }) {
   return (
     <div
-      className={`flex flex-col items-center justify-center p-12 text-center bg-card border border-card-border rounded-2xl ${className}`}
+      className={`flex flex-col items-center justify-center p-12 text-center bg-cream-100 border border-cream-300 rounded-lg ${className}`}
     >
-      {icon && <div className="mb-4 text-charcoal-muted">{icon}</div>}
-      <h3 className="font-serif text-xl font-medium text-charcoal mb-2">{title}</h3>
-      <p className="text-sm text-charcoal-light max-w-md mb-6">{description}</p>
+      {icon && <div className="mb-4 text-ink-400">{icon}</div>}
+      <h3 className="font-serif text-xl font-normal text-ink-900 mb-2">{title}</h3>
+      <p className="text-sm text-ink-600 font-light max-w-md mb-6 leading-relaxed">{description}</p>
       {action && <div>{action}</div>}
     </div>
   );

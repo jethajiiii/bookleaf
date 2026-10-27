@@ -1,13 +1,12 @@
 /**
- * Reusable select dropdown component with label and error display.
+ * Reusable Select dropdown adhering to BookLeaf editorial design tokens.
  */
 export function Select({
   label,
+  options = [],
   error,
   helperText,
   id,
-  options = [],
-  children,
   className = '',
   required = false,
   ...props
@@ -19,43 +18,33 @@ export function Select({
       {label && (
         <label
           htmlFor={selectId}
-          className="block text-xs font-semibold text-charcoal-light uppercase tracking-wider mb-1.5"
+          className="block text-[11px] font-sans font-semibold text-[#55433c] uppercase tracking-widest mb-1.5"
         >
-          {label} {required && <span className="text-terracotta">*</span>}
+          {label} {required && <span className="text-[#984221]">*</span>}
         </label>
       )}
 
-      <div className="relative">
-        <select
-          id={selectId}
-          required={required}
-          className={`w-full px-4 py-2.5 rounded-xl border text-sm text-charcoal bg-cream-light appearance-none pr-10 transition-all duration-150 focus:outline-none focus:ring-2 cursor-pointer ${
-            error
-              ? 'border-terracotta focus:border-terracotta focus:ring-terracotta/20 bg-terracotta-light/20'
-              : 'border-card-border focus:border-terracotta focus:ring-terracotta/30'
-          } ${className}`}
-          {...props}
-        >
-          {children ||
-            options.map((opt) => (
-              <option key={opt.value ?? 'empty'} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-        </select>
-
-        {/* Custom chevron icon */}
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-charcoal-muted">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </div>
+      <select
+        id={selectId}
+        required={required}
+        className={`w-full px-4 py-3 rounded-xl border text-sm text-[#2B2622] bg-[#FAF5EE] transition-all duration-150 font-sans focus:outline-none focus:ring-1 ${
+          error
+            ? 'border-[#984221] focus:border-[#984221] focus:ring-[#984221]/20'
+            : 'border-[#E5DCCE] focus:border-[#984221] focus:ring-[#984221]'
+        } ${className}`}
+        {...props}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
 
       {error ? (
-        <p className="mt-1 text-xs text-terracotta font-medium">{error}</p>
+        <p className="mt-1 text-xs text-[#984221] font-medium">{error}</p>
       ) : helperText ? (
-        <p className="mt-1 text-xs text-charcoal-muted">{helperText}</p>
+        <p className="mt-1 text-[11px] text-[#55433c]/70 font-display-italic">{helperText}</p>
       ) : null}
     </div>
   );

@@ -1,11 +1,10 @@
 /**
- * Reusable Card component adhering to BookLeaf design tokens.
- * Background #FBF7EF with 1px #E4D9C4 border.
+ * Reusable Card component adhering to BookLeaf Stitch editorial design tokens.
  */
 export function Card({ children, className = '', ...props }) {
   return (
     <div
-      className={`bg-card border border-card-border rounded-2xl p-6 transition-all duration-200 ${className}`}
+      className={`bg-[#FCF9F5] border border-[#E5DCCE] rounded-2xl p-6 sm:p-8 shadow-soft-card transition-all duration-200 ${className}`}
       {...props}
     >
       {children}

@@ -1,8 +1,9 @@
 const VARIANT_STYLES = {
-  primary: 'bg-terracotta text-white hover:bg-terracotta-hover shadow-sm',
-  secondary: 'bg-card text-charcoal border border-card-border hover:bg-cream-light',
-  outline: 'border border-terracotta text-terracotta hover:bg-terracotta-light',
-  ghost: 'text-charcoal hover:bg-cream-dark/40',
+  primary: 'bg-ink-900 text-cream-100 hover:bg-terracotta-600 shadow-sm',
+  secondary: 'bg-cream-100 text-ink-900 border border-cream-300 hover:bg-cream-200',
+  outline: 'border border-ink-900 text-ink-900 hover:bg-ink-900 hover:text-cream-100',
+  ghost: 'text-ink-600 hover:bg-cream-200/60',
+  danger: 'bg-terracotta-600 text-cream-100 hover:bg-terracotta-700',
 };
 
 const SIZE_STYLES = {
@@ -12,7 +13,7 @@ const SIZE_STYLES = {
 };
 
 /**
- * Reusable pill-shaped button component.
+ * Reusable editorial-style button component.
  */
 export function Button({
   children,
@@ -27,7 +28,7 @@ export function Button({
 
   return (
     <button
-      className={`inline-flex items-center justify-center font-medium rounded-pill transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${vStyle} ${sStyle} ${className}`}
+      className={`inline-flex items-center justify-center font-medium rounded-full tracking-wide transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${vStyle} ${sStyle} ${className}`}
       disabled={disabled}
       {...props}
     >
@@ -37,3 +38,4 @@ export function Button({
 }
 
 export default Button;
+

@@ -7,7 +7,7 @@ import { STATUS_CONFIG, hasNewReplies, getLastSeen, markSeen } from './ticketUti
 
 /**
  * TicketCard renders a single ticket header, expandable conversation thread,
- * "New reply" badge, and reply input.
+ * "New reply" badge, and reply input — styled with the editorial theme.
  *
  * @param {Object} props
  * @param {Object} props.ticket Ticket document (author-safe)
@@ -35,54 +35,57 @@ export function TicketCard({ ticket, isExpanded, onToggle, onTicketUpdate }) {
   }, [isExpanded, ticket.messages?.length]);
 
   return (
-    <div className="bg-card border border-card-border rounded-2xl overflow-hidden transition-shadow hover:shadow-md">
+    <div className="bg-cream-50 border border-cream-300 rounded-lg overflow-hidden transition-all duration-200 hover:border-ink-800 hover:shadow-sm">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full text-left px-5 py-4 flex items-start gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta/40"
+        className="w-full text-left px-6 py-4 flex items-start gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-900/20"
       >
-        <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-[11px] text-charcoal-muted">
+            <span className="font-mono text-[11px] text-ink-400 tracking-wider">
               #{ticket.ticketNo || ticket._id.slice(-6)}
             </span>
             <Badge variant={cfg.badgeVariant}>{cfg.label}</Badge>
             {showNewBadge && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-terracotta text-white text-[10px] font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-white inline-block animate-pulse" />
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-terracotta-600 text-cream-100 text-[10px] font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-cream-100 inline-block animate-pulse" />
                 New reply
               </span>
             )}
           </div>
-          <p className="font-semibold text-charcoal text-sm truncate pr-4">{ticket.subject}</p>
-          <div className="flex flex-wrap gap-3 text-[11px] text-charcoal-muted">
+          <p className="font-serif text-base font-normal text-ink-900 truncate pr-4">
+            {ticket.subject}
+          </p>
+          <div className="flex flex-wrap gap-3 text-[11px] text-ink-400 font-mono">
             <span>{formatDate(ticket.createdAt)}</span>
             {ticket.book && (
               <span className="truncate">
-                Book: <span className="font-medium text-charcoal">{ticket.book.title}</span>
+                Book: <span className="font-medium text-ink-600">{ticket.book.title}</span>
               </span>
             )}
             <span>
-              {ticket.messages?.length ?? 0} message{ticket.messages?.length !== 1 ? 's' : ''}
+              {ticket.messages?.length ?? 0}{' '}
+              {ticket.messages?.length !== 1 ? 'messages' : 'message'}
             </span>
           </div>
         </div>
         <span
-          className={`text-charcoal-muted transition-transform duration-200 mt-1 shrink-0 ${
+          className={`text-ink-400 transition-transform duration-200 mt-1 shrink-0 ${
             isExpanded ? 'rotate-180' : ''
           }`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 9l-7 7-7-7" />
           </svg>
         </span>
       </button>
 
       {isExpanded && (
-        <div className="border-t border-card-border px-5 pb-4">
+        <div className="border-t border-cream-300 px-6 pb-5">
           <div
             ref={threadRef}
-            className="max-h-72 overflow-y-auto pr-1 mt-2"
+            className="max-h-72 overflow-y-auto pr-1 mt-3"
             style={{ scrollBehavior: 'smooth' }}
           >
             <MessageThread messages={ticket.messages || []} />
